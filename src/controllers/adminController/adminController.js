@@ -71,20 +71,17 @@ export const sendOTP = async (req, res) => {
     admin.otpExpire = Date.now() + 10 * 60 * 1000; // 10 min
     await admin.save({ validateBeforeSave: false });
 
-    // Send OTP by email
-      const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: { user: "raghvendra.levontechno@gmail.com", pass: "cfcw hszk avlz dqpr" },
-    });
+      // Send OTP by email
+     const flag = sendOtpMail(otp,admin.email)
+     if (flag) {
+       res.json({ message: "OTP sent to email", success: true });
+     }else{
+      res.status(500).json({ message: "Server Error", success: false });
+     }
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: admin.email,
-      subject: "Your OTP for Admin Password Reset",
-      text: `Your OTP is ${otp}. It will expire in 10 minutes.`,
-    });
+    
 
-    res.json({ message: "OTP sent to email", success: true });
+    
 
 
    
