@@ -15,7 +15,7 @@ export const SendOtpMailContent = (otp)=>{
           <!-- Header: EQES -->
           <tr>
             <td style="padding:28px 32px 12px 32px;text-align:center;">
-              <div style="font-weight:800;font-size:28px;color:#ffffff;letter-spacing:1px;">EQES</div>
+              <div style="font-weight:800;font-size:28px;color:#ffffff;letter-spacing:1px;">EQCAS</div>
               <div style="margin-top:6px;color:rgba(255,255,255,0.85);font-size:13px;">Secure access & identity</div>
             </td>
           </tr>
