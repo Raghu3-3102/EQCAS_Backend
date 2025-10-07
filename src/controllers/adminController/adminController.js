@@ -1,10 +1,10 @@
 import Admin from "../../models/AdminModel/AdminModel.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import nodemailer from "nodemailer";
+import { sendOtpMail } from "../../service/MailSender.js";
 
 // Generate JWT token
-const generateToken = (id) => jwt.sign({ id, role: "admin" }, "Raghu", { expiresIn: "30d" });
+const generateToken = (id) => jwt.sign({ id, role: "admin" }, process.env.JWT_SECRET, { expiresIn: "30d" });
 console.log("JWT Secret:", process.env.JWT_SECRET);
 // 🧾 Register Admin
 export const registerAdmin = async (req, res) => {
@@ -71,19 +71,14 @@ export const sendOTP = async (req, res) => {
     await admin.save({ validateBeforeSave: false });
 
     // Send OTP by email
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: { user: "raghvendra.levontechno@gmail.com", pass: "cfcw hszk avlz dqpr" },
-    });
+     const flag = sendOtpMail(otp,admin.email)
+     if (flag) {
+       res.json({ message: "OTP sent to email", success: true });
+     }else{
+      res.status(500).json({ message: "Server Error", success: false });
+     }
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: admin.email,
-      subject: "Your OTP for Admin Password Reset",
-      text: `Your OTP is ${otp}. It will expire in 10 minutes.`,
-    });
-
-    res.json({ message: "OTP sent to email", success: true });
+   
   } catch (error) {
     console.error("Error in sendOTP:", error);
     res.status(500).json({ message: "Server Error", success: false });
