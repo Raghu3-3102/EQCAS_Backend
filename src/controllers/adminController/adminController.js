@@ -8,76 +8,137 @@ const generateToken = (id) => jwt.sign({ id, role: "admin" }, "Raghu", { expires
 console.log("JWT Secret:", process.env.JWT_SECRET);
 // 🧾 Register Admin
 export const registerAdmin = async (req, res) => {
-  const { email, password } = req.body;
-  const exists = await Admin.findOne({ email });
-  if (exists) return res.status(400).json({ message: "Admin already exists" });
+  try {
+    const { email, password } = req.body;
 
-  const admin = await Admin.create({ email, password });
-  res.status(201).json({ _id: admin._id, email: admin.email, token: generateToken(admin._id) });
-};
+    const exists = await Admin.findOne({ email });
+    if (exists) {
+      return res.status(400).json({ message: "Admin already exists", success: false });
+    }
 
-// 🔐 Login Admin
-export const loginAdmin = async (req, res) => {
-  const { email, password } = req.body;
-  const admin = await Admin.findOne({ email });
-  if (admin && (await admin.matchPassword(password))) {
-    res.json({ _id: admin._id, email: admin.email, token: generateToken(admin._id) });
-  } else {
-    res.status(401).json({ message: "Invalid email or password" });
+    const admin = await Admin.create({ email, password });
+
+    res.status(201).json({
+      _id: admin._id,
+      email: admin.email,
+      token: generateToken(admin._id),
+      success: true,
+    });
+  } catch (error) {
+    console.error("Error in registerAdmin:", error);
+    res.status(500).json({ message: "Server Error", success: false });
   }
 };
 
+
+// 🔐 Login Admin
+export const loginAdmin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const admin = await Admin.findOne({ email });
+
+    if (admin && (await admin.matchPassword(password))) {
+      return res.json({
+        _id: admin._id,
+        email: admin.email,
+        token: generateToken(admin._id),
+        success: true,
+      });
+    } else {
+      return res.status(401).json({ message: "Invalid email or password", success: false });
+    }
+  } catch (error) {
+    console.error("Error in loginAdmin:", error);
+    res.status(500).json({ message: "Server Error", success: false });
+  }
+};
+
+
 // Step 1: Send OTP
 export const sendOTP = async (req, res) => {
-  const { email } = req.body;
-  const admin = await Admin.findOne({ email });
-  if (!admin) return res.status(404).json({ message: "Admin not found" });
+  try {
+    const { email } = req.body;
+    const admin = await Admin.findOne({ email });
 
-  // Generate 6-digit OTP
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  admin.otp = otp;
-  admin.otpExpire = Date.now() + 10 * 60 * 1000; // 10 min
-  await admin.save({ validateBeforeSave: false });
+    if (!admin) {
+      return res.status(404).json({ message: "Admin not found", success: false });
+    }
 
-  // Send OTP by email (using nodemailer)
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: { user: "raghvendra.levontechno@gmail.com", pass: "cfcw hszk avlz dqpr" },
-  });
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    admin.otp = otp;
+    admin.otpExpire = Date.now() + 10 * 60 * 1000; // 10 min
+    await admin.save({ validateBeforeSave: false });
 
-  await transporter.sendMail({
-    from: process.env.EMAIL_USER,
-    to: admin.email,
-    subject: "Your OTP for Admin Password Reset",
-    text: `Your OTP is ${otp}. It will expire in 10 minutes.`,
-  });
+    // Send OTP by email
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: { user: "raghvendra.levontechno@gmail.com", pass: "cfcw hszk avlz dqpr" },
+    });
 
-  res.json({ message: "OTP sent to email" });
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: admin.email,
+      subject: "Your OTP for Admin Password Reset",
+      text: `Your OTP is ${otp}. It will expire in 10 minutes.`,
+    });
+
+    res.json({ message: "OTP sent to email", success: true });
+  } catch (error) {
+    console.error("Error in sendOTP:", error);
+    res.status(500).json({ message: "Server Error", success: false });
+  }
 };
+
 
 // Step 2: Verify OTP
 export const verifyOTP = async (req, res) => {
-  const { email, otp } = req.body;
-  const admin = await Admin.findOne({ email, otp, otpExpire: { $gt: Date.now() } });
-  if (!admin) return res.status(400).json({ message: "Invalid or expired OTP" });
+  try {
+    const { email, otp } = req.body;
 
-  res.json({ message: "OTP verified, proceed to change password" });
+    const admin = await Admin.findOne({
+      email,
+      otp,
+      otpExpire: { $gt: Date.now() },
+    });
+
+    if (!admin) {
+      return res.status(400).json({ message: "Invalid or expired OTP", success: false });
+    }
+
+    res.json({ message: "OTP verified, proceed to change password", success: true });
+  } catch (error) {
+    console.error("Error in verifyOTP:", error);
+    res.status(500).json({ message: "Server Error", success: false });
+  }
 };
+
 
 // Step 3: Change Password
 export const changePassword = async (req, res) => {
-  const { email, password, confirmPassword } = req.body;
-  if (password !== confirmPassword)
-    return res.status(400).json({ message: "Passwords do not match" });
+  try {
+    const { email, password, confirmPassword } = req.body;
 
-  const admin = await Admin.findOne({ email });
-  if (!admin) return res.status(404).json({ message: "Admin not found" });
+    if (password !== confirmPassword) {
+      return res.status(400).json({ message: "Passwords do not match", success: false });
+    }
 
-  admin.password = password; // pre-save hook will hash automatically
-  admin.otp = undefined;
-  admin.otpExpire = undefined;
+    const admin = await Admin.findOne({ email });
+    if (!admin) {
+      return res.status(404).json({ message: "Admin not found", success: false });
+    }
 
-  await admin.save();
-  res.json({ message: "Password changed successfully" });
+    admin.password = password; // pre-save hook will hash automatically
+    admin.otp = undefined;
+    admin.otpExpire = undefined;
+
+    await admin.save();
+
+    res.json({ message: "Password changed successfully", success: true });
+  } catch (error) {
+    console.error("Error in changePassword:", error);
+    res.status(500).json({ message: "Server Error", success: false });
+  }
 };
+
 
