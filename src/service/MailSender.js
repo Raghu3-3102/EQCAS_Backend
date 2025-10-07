@@ -4,7 +4,7 @@ import { SendOtpMailContent } from "../utils/MailContent.js";
 export const sendOtpMail = async (otp, email) => {
   try {
     const mailContent = SendOtpMailContent(otp);
-
+    console.log("env cheking",process.env.EMAIL_PASS)
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
