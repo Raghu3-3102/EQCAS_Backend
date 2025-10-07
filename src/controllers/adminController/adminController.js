@@ -2,6 +2,7 @@ import Admin from "../../models/AdminModel/AdminModel.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { sendOtpMail } from "../../service/MailSender.js";
+import nodemailer from "nodemailer";
 
 // Generate JWT token
 const generateToken = (id) => jwt.sign({ id, role: "admin" }, process.env.JWT_SECRET, { expiresIn: "30d" });
@@ -71,12 +72,20 @@ export const sendOTP = async (req, res) => {
     await admin.save({ validateBeforeSave: false });
 
     // Send OTP by email
-     const flag = sendOtpMail(otp,admin.email)
-     if (flag) {
-       res.json({ message: "OTP sent to email", success: true });
-     }else{
-      res.status(500).json({ message: "Server Error", success: false });
-     }
+      const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: { user: "raghvendra.levontechno@gmail.com", pass: "cfcw hszk avlz dqpr" },
+    });
+
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: admin.email,
+      subject: "Your OTP for Admin Password Reset",
+      text: `Your OTP is ${otp}. It will expire in 10 minutes.`,
+    });
+
+    res.json({ message: "OTP sent to email", success: true });
+
 
    
   } catch (error) {
