@@ -133,4 +133,281 @@ export const getAllCertification = async (req, res) => {
   }
 };
 
+export const getCertificationById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const certification = await Certification.findById(id).populate("assignedAgent");
+
+    if (!certification) {
+      return res.status(404).json({
+        success: false,
+        message: "Certification not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Certification fetched successfully!",
+      certification,
+    });
+  } catch (error) {
+    console.error("Error fetching certification by ID:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while fetching certification by ID",
+      error: error.message,
+    });
+  }
+};
+
+
+export const updateCertification = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const updatedCertification = await Certification.findByIdAndUpdate(
+      id,
+      { $set: req.body },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedCertification) {
+      return res.status(404).json({
+        success: false,
+        message: "Certification not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Certification updated successfully!",
+      certification: updatedCertification,
+    });
+  } catch (error) {
+    console.error("Error updating certification:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while updating certification",
+      error: error.message,
+    });
+  }
+};
+
+
+export const deleteCertification = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // ✅ Find the certification first
+    const certification = await Certification.findById(id);
+    if (!certification) {
+      return res.status(404).json({
+        success: false,
+        message: "Certification not found",
+      });
+    }
+
+    // ✅ Get assigned agent ID (if any)
+    const agentId = certification.assignedAgent;
+
+    // ✅ Delete the certification
+    await Certification.findByIdAndDelete(id);
+
+    // ✅ Update agent data (decrease count & remove companyId)
+    if (agentId) {
+      const agent = await Agent.findById(agentId);
+      if (agent) {
+        agent.companyCount = Math.max(0, agent.companyCount - 1); // prevent negative count
+        agent.companyIds = agent.companyIds.filter(
+          (companyId) => companyId.toString() !== id
+        );
+        await agent.save();
+      }
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Certification deleted successfully and agent updated!",
+    });
+  } catch (error) {
+    console.error("Error deleting certification:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while deleting certification",
+      error: error.message,
+    });
+  }
+};
+
+ 
+
+
+
+// ✅ Search Certification by certificationNumber and companyName
+export const searchCertification = async (req, res) => {
+  try {
+    const { certificationNumber, companyName } = req.query;
+
+    // Check if both fields are provided
+    if (!certificationNumber || !companyName) {
+      return res.status(400).json({
+        success: false,
+        message: "Both certificationNumber and companyName are required.",
+      });
+    }
+
+    // ✅ Search for a match (case-insensitive for companyName)
+    const certification = await Certification.findOne({
+      certificationNumber,
+      companyName: { $regex: new RegExp(`^${companyName}$`, "i") },
+    });
+
+    if (!certification) {
+      return res.status(404).json({
+        success: false,
+        message: "No certification found matching both fields.",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Certification found successfully!",
+      certification,
+    });
+  } catch (error) {
+    console.error("Error searching certification:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while searching certification.",
+      error: error.message,
+    });
+  }
+};
+
+
+
+// ✅ Get certification summary: companyName, certification count, and status
+export const getCertificationSummary = async (req, res) => {
+  try {
+    // Group certifications by companyName
+    const summary = await Certification.aggregate([
+      {
+        $group: {
+          _id: "$companyName",
+          certificationCount: { $sum: 1 },
+          clientNames: { $addToSet: "$clientName" }, // collect unique client names
+          status: { $first: "$status" }, // get first status
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          companyName: "$_id",
+          certificationCount: 1,
+          clientNames: 1,
+          status: 1,
+        },
+      },
+    ]);
+
+    if (!summary.length) {
+      return res.status(404).json({
+        success: false,
+        message: "No certifications found.",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Certification summary fetched successfully!",
+      data: summary,
+    });
+  } catch (error) {
+    console.error("Error fetching certification summary:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while fetching certification summary.",
+      error: error.message,
+    });
+  }
+};
+
+
+
+// ✅ Get all certifications of a company (with agent info & selected fields)
+export const getCertificationsByCompany = async (req, res) => {
+  try {
+    const { companyName } = req.query;
+
+    if (!companyName) {
+      return res.status(400).json({
+        success: false,
+        message: "Company name is required.",
+      });
+    }
+
+    // Find all certifications matching company name (case-insensitive)
+    const certifications = await Certification.find({
+      companyName: { $regex: new RegExp(`^${companyName}$`, "i") },
+    })
+      .select(
+        "companyName certificationNumber standard dateOfRegistration certificationExpiryDate status attachments logo assignedAgent"
+      )
+      .sort({ createdAt: -1 });
+
+    if (!certifications.length) {
+      return res.status(404).json({
+        success: false,
+        message: `No certifications found for company: ${companyName}`,
+      });
+    }
+
+    // Add agent info and include attachments & logo as-is
+    const certificationsWithAgent = await Promise.all(
+      certifications.map(async (cert) => {
+        let agentInfo = null;
+        if (cert.assignedAgent) {
+          agentInfo = await Agent.findById(cert.assignedAgent)
+            .select("agentName agentEmail agentNumber")
+            .lean();
+        }
+
+        return {
+          companyName: cert.companyName,
+          certificationNumber: cert.certificationNumber,
+          standard: cert.standard,
+          dateOfRegistration: cert.dateOfRegistration,
+          certificationExpiryDate: cert.certificationExpiryDate,
+          status: cert.status,
+          logo: cert.logo || null,          // always include logo
+          attachments: cert.attachments || [], // send attachments exactly as stored
+          assignedAgentInfo: agentInfo || {},  // send agent info or empty object
+        };
+      })
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Certifications fetched successfully!",
+      total: certificationsWithAgent.length,
+      companyName,
+      certifications: certificationsWithAgent,
+    });
+  } catch (error) {
+    console.error("Error fetching certifications by company:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while fetching certifications by company",
+      error: error.message,
+    });
+  }
+};
+
+
+
+
+
+
+
 
