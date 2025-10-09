@@ -1,5 +1,5 @@
-import dotenv from "dotenv";
-dotenv.config();
+// import dotenv from "dotenv";
+// dotenv.config();
 
 import sgMail from "@sendgrid/mail";
 import { SendOtpMailContent } from "../utils/MailContent.js";
