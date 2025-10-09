@@ -1,5 +1,5 @@
 import Agent from "../../models/AgentModel/AgentModel.js";
-
+import Certification from "../../models/CertificationModel/CertificationModel.js";
 
 export const createAgent = async (req, res) => {
   try {
@@ -61,4 +61,5 @@ export const getAgentById = async (req, res) => {
     res.status(500).json({ message: "Server Error", success: false });
   }
 };
+
 
