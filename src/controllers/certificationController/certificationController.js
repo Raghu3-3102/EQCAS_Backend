@@ -1,9 +1,11 @@
-import Certification from "../../models/CertificationModel/CertificationModel.js";
-import Agent from "../../models/AgentModel/AgentModel.js";
+
 // ✅ Create Certification Controller
+import Agent from "../../models/AgentModel/AgentModel.js";
+import Certification from "../../models/CertificationModel/CertificationModel.js";
+import Company from "../../models/componyModel/ComponyModel.js";
+
 export const createCertification = async (req, res) => {
   try {
-    // Extract data from form body
     const {
       companyName,
       address,
@@ -20,15 +22,15 @@ export const createCertification = async (req, res) => {
       assignedAgent,
     } = req.body;
 
-    console.log(req.body)
+    console.log("Certification Body:", req.body);
 
     // ✅ Handle uploaded attachments
-    const attachments = req.files?.attachments?.map(file => ({
-       fileName: file.originalname,
-       fileUrl: file.path, // Cloudinary gives correct URL with extension
-       fileType: file.mimetype,
-    })) || [];
-
+    const attachments =
+      req.files?.attachments?.map((file) => ({
+        fileName: file.originalname,
+        fileUrl: file.path,
+        fileType: file.mimetype,
+      })) || [];
 
     // ✅ Handle uploaded logo
     const logo = req.files?.logo?.[0]?.path || null;
@@ -54,21 +56,43 @@ export const createCertification = async (req, res) => {
 
     const savedCertificate = await newCertification.save();
 
-    // const agentId =  savedCertificate.assignedAgent
+    // ✅ Update Agent data
+    const agentData = await Agent.findById(assignedAgent);
+    if (agentData) {
+      agentData.companyCount = (agentData.companyCount || 0) + 1;
+      agentData.companyIds = [...(agentData.companyIds || []), savedCertificate._id];
+      await agentData.save();
+    }
 
-    const agentData = await Agent.findById(assignedAgent)
+    // ✅ Create or Update Company data
+    let existingCompany = await Company.findOne({ companyName });
 
-    let count = agentData.companyCount
-    agentData.companyCount =  count + 1;
-    let len = agentData.companyIds.length
-    agentData.companyIds[len]  = savedCertificate._id
-
-    await agentData.save()
+    if (existingCompany) {
+      // Update existing company
+      existingCompany.certificationIds.push(savedCertificate._id);
+      existingCompany.certificationCount = existingCompany.certificationIds.length;
+      existingCompany.address = address || existingCompany.address;
+      existingCompany.logo = logo || existingCompany.logo;
+      existingCompany.clientName = clientName || existingCompany.clientName;
+      await existingCompany.save();
+    } else {
+      // Create new company
+      const newCompany = new Company({
+        companyName,
+        address,
+        logo,
+        status: "Active",
+        certificationCount: 1,
+        certificationIds: [savedCertificate._id],
+        clientName,
+      });
+      await newCompany.save();
+    }
 
     res.status(201).json({
       success: true,
-      message: "Certification created successfully!",
-      certification: newCertification,
+      message: "Certification and Company created/updated successfully!",
+      certification: savedCertificate,
     });
   } catch (error) {
     console.error("Error creating certification:", error);
@@ -79,6 +103,7 @@ export const createCertification = async (req, res) => {
     });
   }
 };
+
 
 
 
