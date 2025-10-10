@@ -20,9 +20,13 @@ export const createCertification = async (req, res) => {
       certificationNumber,
       status,
       assignedAgent,
+      firstSurveillanceStatus,
+      firstSurveillanceNotes,
+      secondSurveillanceStatus,
+      secondSurveillanceNotes
     } = req.body;
 
-    console.log("Certification Body:", req.body);
+    
 
     // ✅ Handle uploaded attachments
     const attachments =
@@ -52,6 +56,10 @@ export const createCertification = async (req, res) => {
       assignedAgent,
       attachments,
       logo,
+      firstSurveillanceStatus,
+      firstSurveillanceNotes,
+      secondSurveillanceStatus,
+      secondSurveillanceNotes
     });
 
     const savedCertificate = await newCertification.save();

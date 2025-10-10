@@ -13,16 +13,16 @@ const certificationSchema = new mongoose.Schema({
   firstSurveillanceAudit: { type: Date },
   firstSurveillanceStatus: { 
     type: String, 
-    enum: ["Completed", "Pending", "Yet to be completed"], 
-    default: "Yet to be completed"
+    enum: ["Completed", "Pending"], 
+    default: "Pending"
   },
   firstSurveillanceNotes: { type: String, default: "" }, // Notes by auditor
 
   secondSurveillanceAudit: { type: Date },
   secondSurveillanceStatus: { 
     type: String, 
-    enum: ["Completed", "Pending", "Yet to be completed"], 
-    default: "Yet to be completed"
+    enum: ["Completed", "Pending"], 
+    default: "Pending"
   },
   secondSurveillanceNotes: { type: String, default: "" }, // Notes by auditor
 

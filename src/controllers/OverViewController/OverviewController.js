@@ -163,6 +163,8 @@ export const getYearlyCertificationStats = async (req, res) => {
 
 
 
+
+
 // Main controller
 export const getCertificationStatsByPeriod = async (req, res) => {
   try {
@@ -290,6 +292,40 @@ export const getTodayCertificationStats = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+
+
+// ✅ Get company registration count for a specific month
+export const getCompanyRegistrationsByMonth = async (req, res) => {
+  try {
+    const { year, month } = req.query;
+
+    if (!year || !month) {
+      return res.status(400).json({ message: "Year and month are required" });
+    }
+
+    const monthIndex = parseInt(month) - 1; // 0-based index
+    const startOfMonth = new Date(year, monthIndex, 1);
+    const endOfMonth = new Date(year, monthIndex + 1, 0, 23, 59, 59, 999);
+
+    const count = await Company.countDocuments({
+      createdAt: { $gte: startOfMonth, $lte: endOfMonth },
+    });
+
+    return res.status(200).json({
+      year,
+      month,
+      totalCompaniesRegistered: count,
+      message: `Total companies registered in ${year}-${month}: ${count}`,
+    });
+  } catch (error) {
+    console.error("Error fetching monthly company registration stats:", error);
+    res.status(500).json({
+      message: "Server error while fetching company registration count",
+      error: error.message,
+    });
   }
 };
 
