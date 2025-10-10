@@ -9,29 +9,41 @@ const certificationSchema = new mongoose.Schema({
   clientName: { type: String },
   standard: { type: String },
   email: { type: String },
+
   firstSurveillanceAudit: { type: Date },
+  firstSurveillanceStatus: { 
+    type: String, 
+    enum: ["Completed", "Pending", "Yet to be completed"], 
+    default: "Yet to be completed"
+  },
+  firstSurveillanceNotes: { type: String, default: "" }, // Notes by auditor
+
   secondSurveillanceAudit: { type: Date },
+  secondSurveillanceStatus: { 
+    type: String, 
+    enum: ["Completed", "Pending", "Yet to be completed"], 
+    default: "Yet to be completed"
+  },
+  secondSurveillanceNotes: { type: String, default: "" }, // Notes by auditor
+
   certificationNumber: { type: String },
   status: { type: String, enum: ["Active", "Inactive", "Pending"], default: "Pending" },
 
-  // Multiple document uploads (PDF, Word, etc.)
   attachments: [
     {
       fileName: { type: String },
-      fileUrl: { type: String }, // Store the path or cloud URL
+      fileUrl: { type: String },
       fileType: { type: String },
     },
   ],
 
-  // Company logo (image)
   logo: {
-    type: String, // URL or file path
+    type: String,
   },
 
-  // Assigned Agent
   assignedAgent: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Agent", // reference to Agent model
+    ref: "Agent",
   },
 }, { timestamps: true });
 
