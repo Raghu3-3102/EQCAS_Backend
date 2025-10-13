@@ -9,6 +9,15 @@ const certificationSchema = new mongoose.Schema({
   clientName: { type: String },
   standard: { type: String },
   email: { type: String },
+    // ✅ Newly added fields
+  country: { 
+    type: String, 
+    required: true 
+  },
+  city: { 
+    type: String, 
+    required: true 
+  },
 
   firstSurveillanceAudit: { type: Date },
   firstSurveillanceStatus: { 

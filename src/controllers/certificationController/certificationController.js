@@ -15,6 +15,8 @@ export const createCertification = async (req, res) => {
       clientName,
       standard,
       email,
+      country,       // ✅ newly added
+      city,   
       firstSurveillanceAudit,
       secondSurveillanceAudit,
       certificationNumber,
@@ -49,6 +51,8 @@ export const createCertification = async (req, res) => {
       clientName,
       standard,
       email,
+      country,    
+      city,   
       firstSurveillanceAudit,
       secondSurveillanceAudit,
       certificationNumber,
@@ -290,6 +294,8 @@ export const updateCertification = async (req, res) => {
       clientName: req.body.clientName,
       standard: req.body.standard,
       email: req.body.email,
+      country:req.body.country,       // ✅ newly added
+      city:req.body.city,   
       firstSurveillanceAudit: req.body.firstSurveillanceAudit,
       secondSurveillanceAudit: req.body.secondSurveillanceAudit,
       certificationNumber: req.body.certificationNumber,
