@@ -1,6 +1,6 @@
 import Certification from "../../models/CertificationModel/CertificationModel.js";
 
-export const firstSurveillance = async (req, res) => {
+export const ExpiredCertification = async (req, res) => {
   try {
     const today = new Date();
     const next60Days = new Date();
@@ -8,7 +8,7 @@ export const firstSurveillance = async (req, res) => {
 
     // ✅ Find certifications whose first surveillance date is within the next 60 days
     const upcomingFirstSurveillance = await Certification.find({
-      firstSurveillanceAudit: {
+      certificationExpiryDate: {
         $gte: today,
         $lte: next60Days,
       },

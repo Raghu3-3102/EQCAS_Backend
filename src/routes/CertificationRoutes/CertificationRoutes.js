@@ -31,7 +31,12 @@ router.get("/get", getAllCertification);
 router.get("/get/:id", getCertificationById);
 
 // ✅ Update certification by ID
-router.put("/update/:id", updateCertification);
+router.put("/update/:id", 
+    upload.fields([
+    { name: "attachments", maxCount: 10 },
+    { name: "logo", maxCount: 1 },
+  ]),
+  updateCertification);
 
 // ✅ Delete certification by ID
 router.delete("/delete/:id", deleteCertification);

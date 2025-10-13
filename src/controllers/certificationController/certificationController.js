@@ -195,35 +195,133 @@ export const getCertificationById = async (req, res) => {
 };
 
 
+// export const updateCertification = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     console.log(req.body)
+//     const updatedCertification = await Certification.findByIdAndUpdate(
+//       id,
+//       { $set: req.body },
+//       { new: true, runValidators: true }
+//     );
+
+//     if (!updatedCertification) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Certification not found",
+//       });
+//     }
+
+//     res.status(200).json({
+//       success: true,
+//       message: "Certification updated successfully!",
+//       certification: updatedCertification,
+//     });
+//   } catch (error) {
+//     console.error("Error updating certification:", error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Server error while updating certification",
+//       error: error.message,
+//     });
+//   }
+// };
+// export const updateCertification = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+
+//     // ✅ Find the existing certification first
+//     const certification = await Certification.findById(id);
+//     if (!certification) {
+//       return res.status(404).json({ success: false, message: "Certification not found" });
+//     }
+
+//     // ✅ Update attachments if new ones uploaded
+//     if (req.files?.attachments) {
+//       const newAttachments = req.files.attachments.map(file => ({
+//         fileName: file.originalname,
+//         fileUrl: file.path,
+//         fileType: file.mimetype,
+//       }));
+//       // Merge with existing attachments or replace entirely
+//       certification.attachments = [...(certification.attachments || []), ...newAttachments];
+//     }
+
+//     // ✅ Update logo if new one uploaded
+//     if (req.files?.logo?.[0]) {
+//       certification.logo = req.files.logo[0].path;
+//     }
+
+//     // ✅ Update other fields from req.body
+//     Object.keys(req.body).forEach(key => {
+//       certification[key] = req.body[key];
+//     });
+
+//     const updatedCertification = await certification.save();
+
+//     res.status(200).json({
+//       success: true,
+//       message: "Certification updated successfully!",
+//       certification: updatedCertification,
+//     });
+//   } catch (error) {
+//     console.error("Error updating certification:", error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Server error while updating certification",
+//       error: error.message,
+//     });
+//   }
+// };
 export const updateCertification = async (req, res) => {
   try {
-    const { id } = req.params;
+    // console.log("🔥 req.body:", req.body); // this will now have your form fields
+    // console.log("🔥 req.files:", req.files); // attachments & logo
 
-    const updatedCertification = await Certification.findByIdAndUpdate(
-      id,
-      { $set: req.body },
-      { new: true, runValidators: true }
-    );
+    const certificationId = req.params.id;
 
-    if (!updatedCertification) {
-      return res.status(404).json({
-        success: false,
-        message: "Certification not found",
-      });
-    }
+    // Example: update certification
+    const updatedData = {
+      companyName: req.body.companyName,
+      address: req.body.address,
+      dateOfRegistration: req.body.dateOfRegistration,
+      certificationExpiryDate: req.body.certificationExpiryDate,
+      scopeOfWork: req.body.scopeOfWork,
+      clientName: req.body.clientName,
+      standard: req.body.standard,
+      email: req.body.email,
+      firstSurveillanceAudit: req.body.firstSurveillanceAudit,
+      secondSurveillanceAudit: req.body.secondSurveillanceAudit,
+      certificationNumber: req.body.certificationNumber,
+      firstSurveillanceStatus: req.body.firstSurveillanceStatus,
+      secondSurveillanceStatus: req.body.secondSurveillanceStatus,
+      firstSurveillanceNotes: req.body.firstSurveillanceNotes,
+      secondSurveillanceNotes: req.body.secondSurveillanceNotes,
+      status: req.body.status,
+      assignedAgent: req.body.assignedAgent,
+      logo: req.files?.logo ? req.files.logo[0].path : undefined,
+      attachments: req.files?.attachments
+        ? req.files.attachments.map((file) => ({
+            fileName: file.originalname,
+            fileUrl: file.path,
+            fileType: file.mimetype,
+          }))
+        : [],
+    };
+
+    // Update in DB
+    const certification = await Certification.findByIdAndUpdate(certificationId, updatedData, {
+      new: true,
+    });
 
     res.status(200).json({
       success: true,
       message: "Certification updated successfully!",
-      certification: updatedCertification,
+      certification,
     });
   } catch (error) {
-    console.error("Error updating certification:", error);
-    res.status(500).json({
-      success: false,
-      message: "Server error while updating certification",
-      error: error.message,
-    });
+    console.error(error);
+    res.status(500).json({ success: false, message: "Something went wrong", error });
   }
 };
 
