@@ -8,7 +8,8 @@ import {
   deleteCertification,
   searchCertification,
   getCertificationSummary,
-  getCertificationsByCompany
+  getCertificationsByCompany,
+  filterCertifications 
 } from "../../controllers/certificationController/certificationController.js";
 
 const router = express.Router();
@@ -43,5 +44,8 @@ router.get("/summary", getCertificationSummary);
 
 // ✅ Get all certifications of a company
 router.get("/company", getCertificationsByCompany);
+
+// Filter all certification
+router.get("/filter", filterCertifications);
 
 export default router;

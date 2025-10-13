@@ -1,4 +1,5 @@
 import Company from "../../models/componyModel/ComponyModel.js";
+import Certification from "../../models/CertificationModel/CertificationModel.js";
 
 // Get all companies
 export const getAllCompanies = async (req, res) => {
@@ -46,3 +47,75 @@ export const deleteCompany = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+
+
+
+export const filterCompanies = async (req, res) => {
+  try {
+    let {
+      search = "",
+      status = "All",
+      fromDate,
+      toDate,
+      page = 1,
+      limit = 10,
+    } = req.query;
+
+    page = parseInt(page) || 1;
+    limit = parseInt(limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const query = {};
+
+    // ✅ Search by companyName or clientName
+    if (search) {
+      const regex = new RegExp(search, "i");
+      query.$or = [{ companyName: regex }, { clientName: regex }];
+    }
+
+    // ✅ Filter by status (default = All)
+    if (status && status !== "All") {
+      query.status = status;
+    }
+
+    // ✅ Filter by creation date (createdAt)
+    if (fromDate && toDate) {
+      query.createdAt = {
+        $gte: new Date(fromDate),
+        $lte: new Date(toDate),
+      };
+    } else if (fromDate) {
+      query.createdAt = { $gte: new Date(fromDate) };
+    } else if (toDate) {
+      query.createdAt = { $lte: new Date(toDate) };
+    }
+
+    // ✅ Fetch filtered companies with pagination
+    const companies = await Company.find(query)
+      .populate("certificationIds") // optional: to include certifications
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    // ✅ Count total for pagination
+    const total = await Company.countDocuments(query);
+
+    res.status(200).json({
+      success: true,
+      message: "Filtered companies fetched successfully",
+      totalItems: total,
+      totalPages: Math.ceil(total / limit),
+      currentPage: page,
+      companies,
+    });
+  } catch (error) {
+    console.error("Error filtering companies:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while filtering companies",
+      error: error.message,
+    });
+  }
+};
+

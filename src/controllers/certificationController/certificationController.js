@@ -439,6 +439,97 @@ export const getCertificationsByCompany = async (req, res) => {
 
 
 
+export const filterCertifications = async (req, res) => {
+  try {
+    let {
+      search = "",
+      status = "All",
+      fromDate,
+      toDate,
+      page = 1,
+      limit = 10,
+    } = req.query;
+
+    page = parseInt(page) || 1;
+    limit = parseInt(limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const query = {};
+
+    // ✅ Search filter
+    if (search) {
+      const regex = new RegExp(search, "i");
+      query.$or = [
+        { companyName: regex },
+        { scopeOfWork: regex },
+        { clientName: regex },
+        { standard: regex },
+        { email: regex },
+        { certificationNumber: regex },
+      ];
+    }
+
+    // ✅ Status filter
+    if (status && status !== "All") {
+      query.status = status;
+    }
+
+    // ✅ Date range filter (based on dateOfRegistration)
+    if (fromDate && toDate) {
+      query.dateOfRegistration = {
+        $gte: new Date(fromDate),
+        $lte: new Date(toDate),
+      };
+    } else if (fromDate) {
+      query.dateOfRegistration = { $gte: new Date(fromDate) };
+    } else if (toDate) {
+      query.dateOfRegistration = { $lte: new Date(toDate) };
+    }
+
+    // ✅ Fetch filtered data with pagination
+    const certifications = await Certification.find(query)
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 });
+
+    // ✅ Attach agent info to each certification
+    const certificationsWithAgent = await Promise.all(
+      certifications.map(async (cert) => {
+        let agentInfo = null;
+        if (cert.assignedAgent) {
+          agentInfo = await Agent.findById(cert.assignedAgent).lean();
+        }
+        return {
+          ...cert.toObject(),
+          assignedAgentInfo: agentInfo,
+        };
+      })
+    );
+
+    // ✅ Count total
+    const total = await Certification.countDocuments(query);
+
+    res.status(200).json({
+      success: true,
+      message: "Filtered certifications fetched successfully",
+      totalItems: total,
+      totalPages: Math.ceil(total / limit),
+      currentPage: page,
+      certifications: certificationsWithAgent,
+    });
+  } catch (error) {
+    console.error("Error filtering certifications:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while filtering certifications",
+      error: error.message,
+    });
+  }
+};
+
+
+
+
 
 
 
