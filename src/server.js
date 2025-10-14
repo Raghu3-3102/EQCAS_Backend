@@ -24,5 +24,14 @@ app.use(express.json());
 
 app.use("/api/v1", routes);
 
+
+app.get("/api/v1/ping", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "Server is alive 🔥",
+    timestamp: new Date(),
+  });
+});
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
