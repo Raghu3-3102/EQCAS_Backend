@@ -1,5 +1,6 @@
 import Company from "../../models/componyModel/ComponyModel.js";
 import Certification from "../../models/CertificationModel/CertificationModel.js";
+import Agent from "../../models/AgentModel/AgentModel.js"
 
 // Get all companies
 export const getAllCompanies = async (req, res) => {

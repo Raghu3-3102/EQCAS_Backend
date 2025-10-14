@@ -15,8 +15,8 @@ export const createCertification = async (req, res) => {
       clientName,
       standard,
       email,
-      country,       // ✅ newly added
-      city,   
+      country,
+      city,
       firstSurveillanceAudit,
       secondSurveillanceAudit,
       certificationNumber,
@@ -25,10 +25,9 @@ export const createCertification = async (req, res) => {
       firstSurveillanceStatus,
       firstSurveillanceNotes,
       secondSurveillanceStatus,
-      secondSurveillanceNotes
+      secondSurveillanceNotes,
+      companyPhoneNumber,
     } = req.body;
-
-    
 
     // ✅ Handle uploaded attachments
     const attachments =
@@ -51,8 +50,8 @@ export const createCertification = async (req, res) => {
       clientName,
       standard,
       email,
-      country,    
-      city,   
+      country,
+      city,
       firstSurveillanceAudit,
       secondSurveillanceAudit,
       certificationNumber,
@@ -63,7 +62,8 @@ export const createCertification = async (req, res) => {
       firstSurveillanceStatus,
       firstSurveillanceNotes,
       secondSurveillanceStatus,
-      secondSurveillanceNotes
+      secondSurveillanceNotes,
+      companyPhoneNumber
     });
 
     const savedCertificate = await newCertification.save();
@@ -80,15 +80,18 @@ export const createCertification = async (req, res) => {
     let existingCompany = await Company.findOne({ companyName });
 
     if (existingCompany) {
-      // Update existing company
       existingCompany.certificationIds.push(savedCertificate._id);
       existingCompany.certificationCount = existingCompany.certificationIds.length;
       existingCompany.address = address || existingCompany.address;
       existingCompany.logo = logo || existingCompany.logo;
       existingCompany.clientName = clientName || existingCompany.clientName;
+      existingCompany.country = country || existingCompany.country;
+      existingCompany.city = city || existingCompany.city;
+      existingCompany.companyEmail = email || existingCompany.email;
+      existingCompany.companyPhoneNumber = companyPhoneNumber || existingCompany.companyPhoneNumber;
+     
       await existingCompany.save();
     } else {
-      // Create new company
       const newCompany = new Company({
         companyName,
         address,
@@ -97,6 +100,10 @@ export const createCertification = async (req, res) => {
         certificationCount: 1,
         certificationIds: [savedCertificate._id],
         clientName,
+        country,
+        city,
+        companyEmail:email,
+        companyPhoneNumber,
       });
       await newCompany.save();
     }
@@ -107,7 +114,7 @@ export const createCertification = async (req, res) => {
       certification: savedCertificate,
     });
   } catch (error) {
-    console.error("Error creating certification:", error);
+    console.error("❌ Error creating certification:", error);
     res.status(500).json({
       success: false,
       message: "Server error while creating certification",
@@ -115,6 +122,7 @@ export const createCertification = async (req, res) => {
     });
   }
 };
+
 
 
 

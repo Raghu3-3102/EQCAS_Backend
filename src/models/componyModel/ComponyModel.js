@@ -34,6 +34,24 @@ const companySchema = new mongoose.Schema(
     clientName: {
       type: String,
       trim: true
+    },
+    companyEmail: {
+      type: String,
+      trim: true,
+      required: false
+    },
+    companyPhoneNumber: {
+      type: String,
+      trim: true,
+      required: false
+    },
+    country: {
+      type: String,
+      required: true
+    },
+    city: {
+      type: String,
+      required: true
     }
   },
   { timestamps: true }
