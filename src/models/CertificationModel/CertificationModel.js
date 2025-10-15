@@ -11,7 +11,9 @@ const certificationSchema = new mongoose.Schema(
     standard: { type: String },
     email: { type: String },
     // ✅ Optional company contact fields
-    companyPhoneNumber: { type: String, trim: true, required: false },
+    companyPhoneCode: { type: String, required: false, trim: true }, // "+91"
+    companyPhoneNumber: { type: String, required: false, trim: true }, // "9876543210"
+
 
     country: { type: String, required: true },
     city: { type: String, required: true },

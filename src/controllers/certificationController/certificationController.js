@@ -26,6 +26,7 @@ export const createCertification = async (req, res) => {
       firstSurveillanceNotes,
       secondSurveillanceStatus,
       secondSurveillanceNotes,
+      companyPhoneCode,
       companyPhoneNumber,
     } = req.body;
 
@@ -63,6 +64,7 @@ export const createCertification = async (req, res) => {
       firstSurveillanceNotes,
       secondSurveillanceStatus,
       secondSurveillanceNotes,
+      companyPhoneCode,
       companyPhoneNumber
     });
 
@@ -88,6 +90,7 @@ export const createCertification = async (req, res) => {
       existingCompany.country = country || existingCompany.country;
       existingCompany.city = city || existingCompany.city;
       existingCompany.companyEmail = email || existingCompany.email;
+      existingCompany.companyPhoneCode = companyPhoneCode || existingCompany.companyPhoneCode,
       existingCompany.companyPhoneNumber = companyPhoneNumber || existingCompany.companyPhoneNumber;
      
       await existingCompany.save();
@@ -103,6 +106,7 @@ export const createCertification = async (req, res) => {
         country,
         city,
         companyEmail:email,
+        companyPhoneCode,
         companyPhoneNumber,
       });
       await newCompany.save();
@@ -319,6 +323,8 @@ export const updateCertification = async (req, res) => {
       clientName: req.body.clientName,
       standard: req.body.standard,
       email: req.body.email,
+      companyPhoneCode:req.body.companyPhoneCode,
+      companyPhoneNumber:req.body.companyPhoneNumber,
       country: req.body.country,
       city: req.body.city,
       firstSurveillanceAudit: req.body.firstSurveillanceAudit,
