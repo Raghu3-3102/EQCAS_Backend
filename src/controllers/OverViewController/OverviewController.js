@@ -329,6 +329,74 @@ export const getCompanyRegistrationsByMonth = async (req, res) => {
   }
 };
 
+export const getCurrentWeekCertificationStats = async (req, res) => {
+  try {
+    const today = new Date();
+
+    // 🗓️ Get Monday of current week
+    const firstDayOfWeek = new Date(today);
+    const dayOfWeek = firstDayOfWeek.getDay(); // 0 = Sunday
+    const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    firstDayOfWeek.setDate(today.getDate() + diffToMonday);
+    firstDayOfWeek.setHours(0, 0, 0, 0);
+
+    // 🗓️ Get Sunday of current week
+    const lastDayOfWeek = new Date(firstDayOfWeek);
+    lastDayOfWeek.setDate(firstDayOfWeek.getDate() + 6);
+    lastDayOfWeek.setHours(23, 59, 59, 999);
+
+    const days = [];
+
+    for (let i = 0; i < 7; i++) {
+      const currentDay = new Date(firstDayOfWeek);
+      currentDay.setDate(firstDayOfWeek.getDate() + i);
+      const start = new Date(currentDay.setHours(0, 0, 0, 0));
+      const end = new Date(currentDay.setHours(23, 59, 59, 999));
+
+      const stats = await Certification.aggregate([
+        { $match: { createdAt: { $gte: start, $lte: end } } },
+        {
+          $group: {
+            _id: null,
+            total: { $sum: 1 },
+            active: { $sum: { $cond: [{ $eq: ["$status", "Active"] }, 1, 0] } },
+            inactive: { $sum: { $cond: [{ $eq: ["$status", "Inactive"] }, 1, 0] } },
+          },
+        },
+      ]);
+
+      const total = stats[0]?.total || 0;
+      const active = stats[0]?.active || 0;
+      const inactive = stats[0]?.inactive || 0;
+
+      const activePercentage = total ? ((active / total) * 100).toFixed(2) : "0.00";
+      const inactivePercentage = total ? ((inactive / total) * 100).toFixed(2) : "0.00";
+
+      const dayName = start.toLocaleDateString("en-US", { weekday: "long" });
+
+      days.push({
+        date: start.toISOString().split("T")[0],
+        day: dayName,
+        total,
+        active,
+        inactive,
+        activePercentage: `${activePercentage}%`,
+        inactivePercentage: `${inactivePercentage}%`,
+      });
+    }
+
+    return res.status(200).json({
+      weekStart: firstDayOfWeek.toISOString().split("T")[0],
+      weekEnd: lastDayOfWeek.toISOString().split("T")[0],
+      days,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+
 
 
 
