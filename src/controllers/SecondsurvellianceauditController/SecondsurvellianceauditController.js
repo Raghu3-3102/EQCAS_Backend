@@ -8,12 +8,7 @@ export const SecondSurveillance = async (req, res) => {
     next60Days.setDate(today.getDate() + 60);
 
     // ✅ Find certifications whose first surveillance date is within the next 60 days
-    const upcomingSecondSurveillance = await Certification.find({
-      secondSurveillanceAudit: {
-        $gte: today,
-        $lte: next60Days,
-      },
-    }).select("companyName certificationNumber secondSurveillanceAudit email attachment logo");
+    const upcomingSecondSurveillance = await Certification.find({secondSurveillanceStatus:"Pending"}).select("companyName certificationNumber secondSurveillanceAudit email attachment logo");
 
     // ✅ Add remaining days for each certification
     const certificationsWithRemainingDays = upcomingSecondSurveillance.map((cert) => {

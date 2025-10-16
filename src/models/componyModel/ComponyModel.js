@@ -42,7 +42,7 @@ const companySchema = new mongoose.Schema(
     },
     companyPhoneCode: { type: String, required: false, trim: true }, // "+91"
     companyPhoneNumber: { type: String, required: false, trim: true }, // "9876543210"
-    
+
     country: {
       type: String,
       required: true
@@ -50,6 +50,13 @@ const companySchema = new mongoose.Schema(
     city: {
       type: String,
       required: true
+    },
+
+    // ✅ New optional field
+    alternateEmails: {
+      type: [String],
+      required: false,
+      default: []
     }
   },
   { timestamps: true }

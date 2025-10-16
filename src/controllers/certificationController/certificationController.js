@@ -28,9 +28,10 @@ export const createCertification = async (req, res) => {
       secondSurveillanceNotes,
       companyPhoneCode,
       companyPhoneNumber,
+      alternateEmails, // ✅ Add this
     } = req.body;
 
-    // ✅ Handle uploaded attachments
+    // Handle uploaded attachments
     const attachments =
       req.files?.attachments?.map((file) => ({
         fileName: file.originalname,
@@ -38,10 +39,10 @@ export const createCertification = async (req, res) => {
         fileType: file.mimetype,
       })) || [];
 
-    // ✅ Handle uploaded logo
+    // Handle uploaded logo
     const logo = req.files?.logo?.[0]?.path || null;
 
-    // ✅ Create and save Certification
+    // Create and save Certification
     const newCertification = new Certification({
       companyName,
       address,
@@ -65,12 +66,13 @@ export const createCertification = async (req, res) => {
       secondSurveillanceStatus,
       secondSurveillanceNotes,
       companyPhoneCode,
-      companyPhoneNumber
+      companyPhoneNumber,
+      alternateEmails: alternateEmails || [], // ✅ Store in Certification
     });
 
     const savedCertificate = await newCertification.save();
 
-    // ✅ Update Agent data
+    // Update Agent data
     const agentData = await Agent.findById(assignedAgent);
     if (agentData) {
       agentData.companyCount = (agentData.companyCount || 0) + 1;
@@ -78,7 +80,7 @@ export const createCertification = async (req, res) => {
       await agentData.save();
     }
 
-    // ✅ Create or Update Company data
+    // Create or Update Company data
     let existingCompany = await Company.findOne({ companyName });
 
     if (existingCompany) {
@@ -89,10 +91,10 @@ export const createCertification = async (req, res) => {
       existingCompany.clientName = clientName || existingCompany.clientName;
       existingCompany.country = country || existingCompany.country;
       existingCompany.city = city || existingCompany.city;
-      existingCompany.companyEmail = email || existingCompany.email;
-      existingCompany.companyPhoneCode = companyPhoneCode || existingCompany.companyPhoneCode,
+      existingCompany.companyEmail = email || existingCompany.companyEmail;
+      existingCompany.companyPhoneCode = companyPhoneCode || existingCompany.companyPhoneCode;
       existingCompany.companyPhoneNumber = companyPhoneNumber || existingCompany.companyPhoneNumber;
-     
+      existingCompany.alternateEmails = alternateEmails || existingCompany.alternateEmails; // ✅ Store in Company
       await existingCompany.save();
     } else {
       const newCompany = new Company({
@@ -105,9 +107,10 @@ export const createCertification = async (req, res) => {
         clientName,
         country,
         city,
-        companyEmail:email,
+        companyEmail: email,
         companyPhoneCode,
         companyPhoneNumber,
+        alternateEmails: alternateEmails || [], // ✅ Store in Company
       });
       await newCompany.save();
     }
@@ -126,6 +129,7 @@ export const createCertification = async (req, res) => {
     });
   }
 };
+
 
 
 
@@ -310,7 +314,7 @@ export const updateCertification = async (req, res) => {
       }));
     }
 
-    // ✅ Merge old + new attachments
+    // Merge old + new attachments
     const mergedAttachments = [...existing.attachments, ...newAttachments];
 
     // Build updated data
@@ -323,8 +327,8 @@ export const updateCertification = async (req, res) => {
       clientName: req.body.clientName,
       standard: req.body.standard,
       email: req.body.email,
-      companyPhoneCode:req.body.companyPhoneCode,
-      companyPhoneNumber:req.body.companyPhoneNumber,
+      companyPhoneCode: req.body.companyPhoneCode,
+      companyPhoneNumber: req.body.companyPhoneNumber,
       country: req.body.country,
       city: req.body.city,
       firstSurveillanceAudit: req.body.firstSurveillanceAudit,
@@ -336,13 +340,30 @@ export const updateCertification = async (req, res) => {
       secondSurveillanceNotes: req.body.secondSurveillanceNotes,
       status: req.body.status,
       assignedAgent: req.body.assignedAgent,
-      logo: req.files?.logo ? req.files.logo[0].path : existing.logo, // ✅ keep old logo if new not uploaded
-      attachments: mergedAttachments, // ✅ preserve existing + new
+      alternateEmails: req.body.alternateEmails || existing.alternateEmails, // ✅ Update alternateEmails
+      logo: req.files?.logo ? req.files.logo[0].path : existing.logo, // keep old logo if new not uploaded
+      attachments: mergedAttachments, // preserve existing + new
     };
 
+    // Update Certification
     const certification = await Certification.findByIdAndUpdate(certificationId, updatedData, {
       new: true,
     });
+
+    // ✅ Update Company document if it exists
+    const existingCompany = await Company.findOne({ companyName: req.body.companyName });
+    if (existingCompany) {
+      existingCompany.address = req.body.address || existingCompany.address;
+      existingCompany.logo = req.files?.logo ? req.files.logo[0].path : existingCompany.logo;
+      existingCompany.clientName = req.body.clientName || existingCompany.clientName;
+      existingCompany.country = req.body.country || existingCompany.country;
+      existingCompany.city = req.body.city || existingCompany.city;
+      existingCompany.companyEmail = req.body.email || existingCompany.companyEmail;
+      existingCompany.companyPhoneCode = req.body.companyPhoneCode || existingCompany.companyPhoneCode;
+      existingCompany.companyPhoneNumber = req.body.companyPhoneNumber || existingCompany.companyPhoneNumber;
+      existingCompany.alternateEmails = req.body.alternateEmails || existingCompany.alternateEmails; // ✅ Update alternateEmails
+      await existingCompany.save();
+    }
 
     res.status(200).json({
       success: true,
@@ -354,6 +375,7 @@ export const updateCertification = async (req, res) => {
     res.status(500).json({ success: false, message: "Something went wrong", error });
   }
 };
+
 
 
 
