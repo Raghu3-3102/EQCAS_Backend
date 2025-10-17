@@ -6,15 +6,17 @@ import {
   deleteCompany,
   filterCompanies
 } from "../../controllers/ComponyController/ComponyController.js";
+import { authMiddleware } from "../../middleware/AuthMiddilewereAll.js";
+import { permissionMiddleware } from "../../middleware/PermissionMidilewere.js";
 
 const router = express.Router();
 
 // Routes
-router.get("/", getAllCompanies);       
-router.get("/filter",filterCompanies)   // Get all companies
-router.get("/:id", getCompanyById);       // Get company by ID
-router.put("/:id", updateCompany);        // Update company
-router.delete("/:id", deleteCompany);     // Delete company
+router.get("/", authMiddleware ,permissionMiddleware("companies"),getAllCompanies);       
+router.get("/filter",authMiddleware ,permissionMiddleware("companies"),filterCompanies)   // Get all companies
+router.get("/:id",authMiddleware ,permissionMiddleware("companies"), getCompanyById);       // Get company by ID
+router.put("/:id",authMiddleware ,permissionMiddleware("companies"), updateCompany);        // Update company
+router.delete("/:id",authMiddleware ,permissionMiddleware("companies"), deleteCompany);     // Delete company
 
 
 export default router;

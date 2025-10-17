@@ -1,4 +1,4 @@
-export const SendOtpMailContent = (otp)=>{
+export const SendOtpMailContent = (otp,role)=>{
     return ( `<!doctype html>
 <html lang="en">
 <head>
@@ -24,7 +24,7 @@ export const SendOtpMailContent = (otp)=>{
           <tr>
             <td style="padding:22px 32px 28px 32px;color:#e6eefc;">
               <p style="margin:0 0 18px 0;font-size:15px;line-height:1.5;color:#e6eefc;">
-                Hi <strong>Admin</strong>,
+                Hi <strong>${role}</strong>,
               </p>
 
               <p style="margin:0 0 18px 0;font-size:15px;line-height:1.5;color:#d7e8ff;">

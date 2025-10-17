@@ -7,10 +7,10 @@ import { SendOtpMailContent } from "../utils/MailContent.js";
 sgMail.setApiKey(process.env.EMAIL_API_KEY); // Set SendGrid API key
 console.log("api_key",process.env.EMAIL_API_KEY)
 
-export const sendOtpMail = async (otp, email) => {
+export const sendOtpMail = async (otp, email,role="Admin") => {
   console.log("api_key",process.env.EMAIL_API_KEY)
   try {
-    const mailContent = SendOtpMailContent(otp);
+    const mailContent = SendOtpMailContent(otp,role);
 
     const msg = {
       to: email,
