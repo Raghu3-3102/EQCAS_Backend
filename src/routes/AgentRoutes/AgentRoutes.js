@@ -10,14 +10,15 @@ import {
 } from "../../controllers/AgentController/AgentController.js";
 
 import {authMiddleware} from "../../middleware/authMiddleware.js"
+import {permissionMiddleware} from "../../middleware/PermissionMidilewere.js"
 
 const router = express.Router();
 
 // Agent Routes
-router.post("/",authMiddleware, createAgent);
+router.post("/",authMiddleware,permissionMiddleware(), createAgent);
 router.get("/",authMiddleware, getAllAgents);
 router.get("/:id",authMiddleware, getAgentById);
-router.put("/:id",updateAgent)
-router.delete("/:id",deleteAgent)
+router.put("/:id",authMiddleware,permissionMiddleware(),updateAgent)
+router.delete("/:id",authMiddleware,permissionMiddleware(),deleteAgent)
 
 export default router;

@@ -12,11 +12,11 @@ import { permissionMiddleware } from "../../middleware/PermissionMidilewere.js";
 const router = express.Router();
 
 // Routes
-router.get("/", authMiddleware ,permissionMiddleware("companies"),getAllCompanies);       
-router.get("/filter",authMiddleware ,permissionMiddleware("companies"),filterCompanies)   // Get all companies
-router.get("/:id",authMiddleware ,permissionMiddleware("companies"), getCompanyById);       // Get company by ID
-router.put("/:id",authMiddleware ,permissionMiddleware("companies"), updateCompany);        // Update company
-router.delete("/:id",authMiddleware ,permissionMiddleware("companies"), deleteCompany);     // Delete company
+router.get("/", authMiddleware ,getAllCompanies);       
+router.get("/filter",authMiddleware ,filterCompanies)   // Get all companies
+router.get("/:id",authMiddleware , getCompanyById);       // Get company by ID
+router.put("/:id",authMiddleware , updateCompany);        // Update company
+router.delete("/:id",authMiddleware ,permissionMiddleware(), deleteCompany);     // Delete company
 
 
 export default router;

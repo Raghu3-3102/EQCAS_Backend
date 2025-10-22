@@ -8,12 +8,12 @@ import { permissionMiddleware } from "../../middleware/PermissionMidilewere.js";
 import { authMiddleware } from "../../middleware/AuthMiddilewereAll.js";
 const router = express.Router();
 
-router.get("/dashboard",authMiddleware,permissionMiddleware("overview"), getDashboardOverview);
-router.get("/dashboard/certifications/year/:year",authMiddleware,permissionMiddleware("overview"), getYearlyCertificationStats);
-router.get("/certifications/stats",authMiddleware,permissionMiddleware("overview"), getCertificationStatsByPeriod);
-router.get("/certifications/stats/monthly",authMiddleware,permissionMiddleware("overview"),getMonthlyCertificationStats)
-router.get("/certifications/stats/today",authMiddleware, permissionMiddleware("overview"),getTodayCertificationStats )
-router.get("/compoy/regitration",authMiddleware,permissionMiddleware("overview"),getCompanyRegistrationsByMonth)
-router.get("/certifications/stats/weekly",authMiddleware,permissionMiddleware("overview"),getCurrentWeekCertificationStats)
+router.get("/dashboard",authMiddleware, getDashboardOverview);
+router.get("/dashboard/certifications/year/:year",authMiddleware, getYearlyCertificationStats);
+router.get("/certifications/stats",authMiddleware, getCertificationStatsByPeriod);
+router.get("/certifications/stats/monthly",authMiddleware,getMonthlyCertificationStats)
+router.get("/certifications/stats/today",authMiddleware,getTodayCertificationStats )
+router.get("/compoy/regitration",authMiddleware,getCompanyRegistrationsByMonth)
+router.get("/certifications/stats/weekly",authMiddleware,getCurrentWeekCertificationStats)
 
 export default router;

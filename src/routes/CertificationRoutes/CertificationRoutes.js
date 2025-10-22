@@ -11,6 +11,8 @@ import {
   getCertificationsByCompany,
   filterCertifications 
 } from "../../controllers/certificationController/certificationController.js";
+import { authMiddleware } from "../../middleware/AuthMiddilewereAll.js";
+import { permissionMiddleware } from "../../middleware/PermissionMidilewere.js";
 
 const router = express.Router();
 
@@ -21,14 +23,15 @@ router.post(
     { name: "attachments", maxCount: 10 },
     { name: "logo", maxCount: 1 },
   ]),
+   authMiddleware,
   createCertification
 );
 
 // ✅ Get all certifications (with search, filters & pagination)
-router.get("/get", getAllCertification);
+router.get("/get", authMiddleware, getAllCertification);
 
 // ✅ Get certification by ID
-router.get("/get/:id", getCertificationById);
+router.get("/get/:id", authMiddleware, getCertificationById);
 
 // ✅ Update certification by ID
 router.put("/update/:id", 
@@ -36,21 +39,22 @@ router.put("/update/:id",
     { name: "attachments", maxCount: 10 },
     { name: "logo", maxCount: 1 },
   ]),
+   authMiddleware,
   updateCertification);
 
 // ✅ Delete certification by ID
-router.delete("/delete/:id", deleteCertification);
+router.delete("/delete/:id", authMiddleware,permissionMiddleware(), deleteCertification);
 
 // ✅ Search by certificationNumber & companyName
 router.get("/search", searchCertification);
 
 // ✅ Certification summary (grouped by company)
-router.get("/summary", getCertificationSummary);
+router.get("/summary", authMiddleware, getCertificationSummary);
 
 // ✅ Get all certifications of a company
-router.get("/company", getCertificationsByCompany);
+router.get("/company", authMiddleware, getCertificationsByCompany);
 
 // Filter all certification
-router.get("/filter", filterCertifications);
+router.get("/filter", authMiddleware, filterCertifications);
 
 export default router;

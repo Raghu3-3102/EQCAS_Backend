@@ -1,4 +1,4 @@
-export const permissionMiddleware = (requiredPage) => {
+export const permissionMiddleware = () => {
   return (req, res, next) => {
     const role = req.role; // set in authMiddleware
     const user = req.user;
@@ -6,7 +6,7 @@ export const permissionMiddleware = (requiredPage) => {
     if (role === "admin") return next(); // admin has full access
 
     // Check if user has permission for this page/action
-    if (user.accessPermissionPages.includes(requiredPage)) {
+    if (user.role === "admin") {
       return next();
     }
 

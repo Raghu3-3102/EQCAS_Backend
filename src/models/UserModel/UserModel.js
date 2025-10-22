@@ -34,8 +34,8 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["admin", "user"],
-      default: "user",
+      enum: ["admin", "editor"],
+      default: "editor",
     },
     accessPermissionPages: {
       type: [String], // e.g. ["overview", "companies"]
