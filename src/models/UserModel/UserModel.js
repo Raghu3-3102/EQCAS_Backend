@@ -20,12 +20,6 @@ const userSchema = new mongoose.Schema(
       required: true,
       minlength: 6,
     },
-    countryCode: {
-      type: String,
-      required: true,
-      trim: true,
-      match: /^\+\d{1,4}$/, // e.g. +91, +1, +44
-    },
     userPhoneNumber: {
       type: String,
       required: true,

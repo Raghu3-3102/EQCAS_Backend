@@ -19,7 +19,6 @@ export const createUser = async (req, res) => {
       userName,
       userEmail,
       userPassword,
-      countryCode,
       userPhoneNumber,
       role,
       accessPermissionPages,
@@ -63,7 +62,7 @@ export const getUserById = async (req, res) => {
  */
 export const updateUser = async (req, res) => {
   try {
-    const { userName, userEmail, countryCode, userPhoneNumber, role, accessPermissionPages, userPassword } = req.body;
+    const { userName, userEmail,  userPhoneNumber, role, accessPermissionPages, userPassword } = req.body;
 
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ success: false, message: "User not found" });
@@ -71,7 +70,6 @@ export const updateUser = async (req, res) => {
     // Update fields
     if (userName) user.userName = userName;
     if (userEmail) user.userEmail = userEmail;
-    if (countryCode) user.countryCode = countryCode;
     if (userPhoneNumber) user.userPhoneNumber = userPhoneNumber;
     if (role) user.role = role;
     if (accessPermissionPages) user.accessPermissionPages = accessPermissionPages;
