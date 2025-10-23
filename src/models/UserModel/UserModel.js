@@ -23,8 +23,6 @@ const userSchema = new mongoose.Schema(
     userPhoneNumber: {
       type: String,
       required: true,
-      trim: true,
-      match: /^[0-9]{7,15}$/, // allows 7–15 digits (international range)
     },
     role: {
       type: String,
