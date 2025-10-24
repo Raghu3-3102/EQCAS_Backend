@@ -34,7 +34,7 @@ export const login = async (req, res) => {
         id: user._id,
         userName: user.userName,
         email: user.userEmail,
-        role: "user",
+        role: user.role,
         accessPermissionPages: user.accessPermissionPages,
         token: generateToken(user._id, "user", user.accessPermissionPages),
         success: true,

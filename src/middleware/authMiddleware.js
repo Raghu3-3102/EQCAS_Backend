@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import Admin from "../models/AdminModel/AdminModel.js";
-// import User from "../../models/UserModel/UserModel.js";
+import User from "../models/UserModel/UserModel.js";
 // import Employee from "../../models/EmployeeModel/EmployeeModel.js";
 
 export const authMiddleware = async (req, res, next) => {
@@ -25,8 +25,6 @@ export const authMiddleware = async (req, res, next) => {
       // Check role and fetch corresponding user
       if (decoded.role === "admin") {
         user = await Admin.findById(decoded.id).select("-password");
-      } else if (decoded.role === "employee") {
-        user = await Employee.findById(decoded.id).select("-password");
       } else {
         user = await User.findById(decoded.id).select("-password");
       }
