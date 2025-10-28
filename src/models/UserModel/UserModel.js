@@ -30,11 +30,15 @@ const userSchema = new mongoose.Schema(
       default: "editor",
     },
     accessPermissionPages: {
-      type: [String], // e.g. ["overview", "companies"]
+      type: [String],
       default: [],
     },
-    otp: String,             // For OTP-based forgot password
-    otpExpire: Date,  
+    profilePhoto: {
+      type: String, // file path or URL
+      required: false,
+    },
+    otp: String,
+    otpExpire: Date,
   },
   { timestamps: true }
 );

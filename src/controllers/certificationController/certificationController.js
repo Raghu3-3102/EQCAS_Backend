@@ -3,6 +3,7 @@
 import Agent from "../../models/AgentModel/AgentModel.js";
 import Certification from "../../models/CertificationModel/CertificationModel.js";
 import Company from "../../models/componyModel/ComponyModel.js";
+import IndividualCertification from "../../models/individualCertificationModel/individualCertificationModel.js";
 
 export const createCertification = async (req, res) => {
   try {
@@ -433,7 +434,6 @@ export const searchCertification = async (req, res) => {
   try {
     const { certificationNumber, companyName } = req.query;
 
-    // Check if both fields are provided
     if (!certificationNumber || !companyName) {
       return res.status(400).json({
         success: false,
@@ -441,23 +441,33 @@ export const searchCertification = async (req, res) => {
       });
     }
 
-    // ✅ Search for a match (case-insensitive for companyName)
-    const certification = await Certification.findOne({
+    // ✅ Step 1: Search in Certification model
+    let certification = await Certification.findOne({
       certificationNumber,
       companyName: { $regex: new RegExp(`^${companyName}$`, "i") },
     });
 
+    // ✅ Step 2: If not found, search in IndividualCertification using clientName
     if (!certification) {
-      return res.status(404).json({
-        success: false,
-        message: "No certification found matching both fields.",
+      certification = await IndividualCertification.findOne({
+        certificationNumber,
+        clientName: { $regex: new RegExp(`^${companyName}$`, "i") },
       });
     }
 
+    if (!certification) {
+      return res.status(404).json({
+        success: false,
+        message: "No certification found matching the provided details.",
+      });
+    }
+
+    // ✅ Step 3: Send success response
     res.status(200).json({
       success: true,
       message: "Certification found successfully!",
       certification,
+      source: certification.companyName ? "Company" : "Individual", // optional info
     });
   } catch (error) {
     console.error("Error searching certification:", error);
@@ -468,6 +478,7 @@ export const searchCertification = async (req, res) => {
     });
   }
 };
+
 
 
 

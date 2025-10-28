@@ -6,6 +6,7 @@ const agentSchema = new mongoose.Schema({
   agentNumber: { type: String, required: true },
   companyCount: { type: Number, default: 0 },       // optional
   companyIds: [{ type: mongoose.Schema.Types.ObjectId, ref: "Company" }], // optional
+  IndividualsId: [{ type: mongoose.Schema.Types.ObjectId, ref: "IndividualCertification" }], // optional
 }, { timestamps: true });
 
 const Agent = mongoose.model("Agent", agentSchema);
