@@ -9,6 +9,50 @@ import { sendOtpMail } from "../../service/MailSender.js"; // optional
 const generateToken = (id, role, accessPages = []) =>
   jwt.sign({ id, role, accessPermissionPages: accessPages }, process.env.JWT_SECRET, { expiresIn: "30d" });
 
+
+export const register = async (req, res) => {
+  try {
+    const { userName, userEmail, userPassword, userPhoneNumber } = req.body;
+
+    if (!userName || !userEmail || !userPassword || !userPhoneNumber) {
+      return res.status(400).json({ message: "All fields are required", success: false });
+    }
+
+    // Check existing user
+    const existingUser = await User.findOne({ userEmail });
+    if (existingUser) {
+      return res.status(400).json({ message: "User already exists", success: false });
+    }
+
+    // ✅ Create user (password will auto hash from schema)
+    const newUser = await User.create({
+      userName,
+      userEmail,
+      userPassword,
+      userPhoneNumber,
+      role: "admin", // 👈 auto assign admin role
+      accessPermissionPages: ["ALL"], // optional
+    });
+
+    return res.status(201).json({
+      message: "Admin registered successfully",
+      success: true,
+      token: generateToken(newUser._id, "admin", "ALL"),
+      user: {
+        id: newUser._id,
+        userName: newUser.userName,
+        email: newUser.userEmail,
+        phone: newUser.userPhoneNumber,
+        role: newUser.role,
+      },
+    });
+  } catch (err) {
+    console.error("Register Error:", err);
+    res.status(500).json({ message: "Server Error", success: false });
+  }
+};
+
+
 // =================== LOGIN ===================
 export const login = async (req, res) => {
   try {
