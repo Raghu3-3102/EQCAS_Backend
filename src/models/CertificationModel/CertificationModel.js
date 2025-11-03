@@ -60,6 +60,11 @@ const certificationSchema = new mongoose.Schema(
     assignedAgent: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Agent"
+    },
+    RenewalStatus:{
+       type: String,
+        enum: ["Renewed", "Not Connected", "In Process"],
+        default: "Not Connected"
     }
   },
   { timestamps: true }

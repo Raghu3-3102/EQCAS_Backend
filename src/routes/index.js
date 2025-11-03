@@ -11,6 +11,7 @@ import userRoutes from "./UserRoutes/UserRouter.js";
 import authAll from "./AuthenticationRoutes/AuthenticationRouter.js"
 import individualCertificationRoutes from "./individualCertificationRoutes/individualCertificationRouter.js";
 import profilerouter from "./ProfileRoutes/ProfileRouter.js"
+import RenewalRouter from "./RenewalRoutes/RenewalRouter.js"
 // import userRoutes from "./userRoutes.js"; // if you have user module
 
 const router = express.Router();
@@ -27,6 +28,7 @@ router.use("/users", userRoutes);
 router.use("/auth",authAll)
 router.use("/individualCertification",individualCertificationRoutes)
 router.use("/profile",profilerouter)
+router.use("/renewal",RenewalRouter)
 
 // router.use("/users", userRoutes); // Add user module later
 
