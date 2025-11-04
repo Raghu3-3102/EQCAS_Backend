@@ -4,6 +4,7 @@ import Agent from "../../models/AgentModel/AgentModel.js";
 import Certification from "../../models/CertificationModel/CertificationModel.js";
 import Company from "../../models/componyModel/ComponyModel.js";
 import IndividualCertification from "../../models/individualCertificationModel/individualCertificationModel.js";
+import PastCycleRecord from "../../models/PastRSEdate/PastRSEdate.js";
 
 export const createCertification = async (req, res) => {
   try {
@@ -152,16 +153,26 @@ export const getAllCertification = async (req, res) => {
       .limit(limit)
       .sort({ createdAt: -1 }); // latest first
 
-    // Attach agent info for each certification
-    const certificationsWithAgent = await Promise.all(
-      certifications.map(async cert => {
+    // Attach Agent Info & Past Cycle Records for each certification
+    const certificationsWithDetails = await Promise.all(
+      certifications.map(async (cert) => {
         let agentInfo = null;
+        let pastCycleRecords = [];
+
+        // Fetch assigned agent details
         if (cert.assignedAgent) {
           agentInfo = await Agent.findById(cert.assignedAgent).lean();
         }
+
+        // ✅ Fetch past cycle records for this certification
+        pastCycleRecords = await PastCycleRecord.find({
+          certificationId: cert._id,
+        });
+
         return {
           ...cert.toObject(),
-          assignedAgentInfo: agentInfo
+          assignedAgentInfo: agentInfo,
+          pastCycleRecords, // ✅ added here
         };
       })
     );
@@ -174,7 +185,7 @@ export const getAllCertification = async (req, res) => {
       page,
       totalPages: Math.ceil(total / limit),
       totalItems: total,
-      certifications: certificationsWithAgent,
+      certifications: certificationsWithDetails,
     });
 
   } catch (error) {
@@ -186,6 +197,7 @@ export const getAllCertification = async (req, res) => {
     });
   }
 };
+
 
 export const getCertificationById = async (req, res) => {
   try {
@@ -200,11 +212,16 @@ export const getCertificationById = async (req, res) => {
       });
     }
 
+    // ✅ Fetch past cycle records for this certification
+    const pastCycleRecords = await PastCycleRecord.find({ certificationId: id });
+
     res.status(200).json({
       success: true,
       message: "Certification fetched successfully!",
       certification,
+      pastCycleRecords, // ✅ added here
     });
+
   } catch (error) {
     console.error("Error fetching certification by ID:", error);
     res.status(500).json({
@@ -214,6 +231,7 @@ export const getCertificationById = async (req, res) => {
     });
   }
 };
+
 
 
 // export const updateCertification = async (req, res) => {
