@@ -32,7 +32,7 @@ export const setRenewalDates = async (req, res) => {
             registrationDateBefore:certification.dateOfRegistration,
             expiryDateBefore:certification.certificationExpiryDate,
             firstSurveillanceHistory : firstsurrvilance,
-            secondSurveillanceDate: secondsurrvilance
+            secondSurveillanceHistory: secondsurrvilance
         });
         await pastRSEdate.save();
 
