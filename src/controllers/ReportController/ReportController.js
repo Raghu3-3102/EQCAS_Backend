@@ -1,5 +1,5 @@
 import Certification from "../../models/CertificationModel/CertificationModel.js";
-import renewal from "../../models/PastRSEdate/PastRSEdate.js";
+import PastCycleRecord from "../../models/PastRSEdate/PastRSEdate.js";
 
 export const getExpiredReports = async (req, res) => {
     try {
@@ -523,34 +523,230 @@ export const getSecondSurveillanceDueReportsByDay = async (req, res) => {
 };
 
 
-// export const OverViewReportRenawalAudit = async (req, res)=>{
-//     try {
-//         const today = new Date();
-//         const TotalExpired = await Certification.countDocuments({
-//             certificationExpiryDate: { $lt: today },
-//             RenewalStatus: "Pending"
-//         })
-
-       
-
-//         const totalRenewed = await Certification.countDocuments({
-//             certificationExpiryDate: { $lt: today },
-//             RenewalStatus: "Renewed"
-//         });
-
-//         const renawalrate = ((totalRenewed / (TotalExpired + totalRenewed)) * 100).toFixed(2);
-
-        
-         
 
 
 
-//         res.status(200).json({
-//             success: true,
-//             data: renewalDue
-//         });
-        
-//     } catch (error) {
-        
-//     }
-// }
+
+export const OverViewReportRenawalAudit = async (req, res) => {
+  try {
+    const today = new Date();
+
+    // 1️⃣ Total expired (Pending)
+    const TotalExpiredNotConnected = await Certification.countDocuments({
+      certificationExpiryDate: { $lt: today },
+      RenewalStatus: "Not Connected"
+    });
+
+     const TotalExpiredInprocess = await Certification.countDocuments({
+      certificationExpiryDate: { $lt: today },
+      RenewalStatus: "In Process"
+    });
+    const TotalExpired = TotalExpiredNotConnected + TotalExpiredInprocess;
+    // 2️⃣ Total renewed (Expired & Renewed)
+    const totalRenewed = await Certification.countDocuments({
+      RenewalStatus: "Renewed"
+    });
+
+    // 3️⃣ Grand total
+    const GrandTotalExpired = TotalExpired + totalRenewed;
+
+    // 4️⃣ Renewal rate
+    const renawalrate = (
+      (totalRenewed / (GrandTotalExpired || 1)) * 100
+    ).toFixed(2);
+
+
+    // 5️⃣ FETCH renewed documents to compute avg renewal time
+    const renewedDocs = await Certification.find({
+      certificationExpiryDate: { $lt: today },
+      RenewalStatus: "Renewed"
+    }).select("certificationExpiryDate renewalDate");
+
+    // Calculate average renewal time (in days)
+    let totalDays = 0;
+
+    renewedDocs.forEach((doc) => {
+      const expiry = new Date(doc.certificationExpiryDate);
+      const renewed = new Date(doc.renewalDate);
+
+      const diffTime = Math.abs(renewed - expiry);
+      const diffDays = diffTime / (1000 * 60 * 60 * 24);
+      totalDays += diffDays;
+    });
+
+    const averageRenewalTime =
+      renewedDocs.length > 0 ? (totalDays / renewedDocs.length).toFixed(2) : 0;
+
+
+    // ✅ Final Response
+    res.status(200).json({
+      success: true,
+      data: {
+       GrandTotalExpired,
+        totalRenewed,
+        renawalrate: `${renawalrate}%`,
+        averageRenewalTime: `${averageRenewalTime} days`,
+      },
+    });
+
+  } catch (error) {
+    console.log("Error in OverViewReportRenawalAudit:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
+export const getMonthlyRenewalCount = async (req, res) => {
+  try {
+    const currentYear = new Date().getFullYear();
+
+    const monthlyData = await PastCycleRecord.aggregate([
+      {
+        $match: {
+           registrationDateBefore: {
+            $gte: new Date(`${currentYear}-01-01T00:00:00.000Z`),
+            $lte: new Date(`${currentYear}-12-31T23:59:59.999Z`)
+          }
+        }
+      },
+      {
+        $group: {
+          _id: { $month: "$registrationDateBefore" },
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const result = {};
+
+    months.forEach((m) => (result[m] = 0)); // default 0
+    monthlyData.forEach((item) => {
+      result[months[item._id - 1]] = item.count;
+    });
+
+    res.status(200).json({
+      success: true,
+      monthlyRenewals: result
+    });
+
+  } catch (error) {
+    console.error("Monthly Error:", error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+};
+
+
+export const getWeeklyRenewalCount = async (req, res) => {
+  try {
+    const today = new Date();
+    const month = today.getMonth();
+    const year = today.getFullYear();
+
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+
+    const weeklyData = await PastCycleRecord.aggregate([
+      {
+        $match: {
+          registrationDateBefore: {
+            $gte: firstDay,
+            $lte: lastDay
+          }
+        }
+      },
+      {
+        $project: {
+          weekNumber: {
+            $floor: {
+              $divide: [
+                { $subtract: [{ $dayOfMonth: "$registrationDateBefore" }, 1] },
+                7
+              ]
+            }
+          }
+        }
+      },
+      {
+        $group: {
+          _id: "$weekNumber",
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    // determine number of weeks in the month
+    const totalDaysInMonth = lastDay.getDate();
+    const totalWeeksInMonth = Math.ceil(totalDaysInMonth / 7);
+
+    const result = {};
+
+    for (let i = 0; i < totalWeeksInMonth; i++) {
+      result[`Week-${i + 1}`] = 0;
+    }
+
+    weeklyData.forEach((item) => {
+      result[`Week-${item._id + 1}`] = item.count;
+    });
+
+    res.status(200).json({
+      success: true,
+      weeklyRenewals: result
+    });
+
+  } catch (error) {
+    console.error("Weekly Error:", error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+};
+
+
+export const getDailyRenewalCount = async (req, res) => {
+  try {
+    const today = new Date();
+    const firstDayOfWeek = new Date(today.setDate(today.getDate() - today.getDay() + 1)); // Monday
+    const lastDayOfWeek = new Date(today.setDate(firstDayOfWeek.getDate() + 6)); // Sunday
+
+    const dailyData = await PastCycleRecord.aggregate([
+      {
+        $match: {
+           registrationDateBefore: {
+            $gte: firstDayOfWeek,
+            $lte: lastDayOfWeek
+          }
+        }
+      },
+      {
+        $project: {
+          day: { $dayOfWeek: "$registrationDateBefore" }
+        }
+      },
+      {
+        $group: {
+          _id: "$day",
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const result = {};
+
+    days.forEach((d) => (result[d] = 0));
+    dailyData.forEach((item) => {
+      result[days[item._id - 1]] = item.count;
+    });
+
+    res.status(200).json({
+      success: true,
+      dailyRenewals: result
+    });
+  } catch (error) {
+    console.error("Daily Error:", error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+};
+
+

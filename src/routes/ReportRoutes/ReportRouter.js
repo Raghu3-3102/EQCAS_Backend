@@ -15,6 +15,12 @@ import {
   getSecondSurveillanceDueReportsByMonth,
   getSecondSurveillanceDueReportsByWeek,
   getSecondSurveillanceDueReportsByDay,
+
+
+  OverViewReportRenawalAudit,
+  getMonthlyRenewalCount,
+  getWeeklyRenewalCount,
+  getDailyRenewalCount
 } from "../../controllers/ReportController/ReportController.js";
 
 const router = express.Router();
@@ -36,5 +42,11 @@ router.get("/second", secondSurveillanceReport);
 router.get("/second/monthly", getSecondSurveillanceDueReportsByMonth);
 router.get("/second/weekly", getSecondSurveillanceDueReportsByWeek);
 router.get("/second/daily", getSecondSurveillanceDueReportsByDay);
+
+/* -------------------- Renewal Audit Overview Reports -------------------------- */
+router.get("/renewal-overview", OverViewReportRenawalAudit);
+router.get("/renewal-overview/monthly", getMonthlyRenewalCount);
+router.get("/renewal-overview/weekly", getWeeklyRenewalCount);
+router.get("/renewal-overview/daily", getDailyRenewalCount);
 
 export default router;

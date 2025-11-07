@@ -17,7 +17,9 @@ const pastCycleSchema = new mongoose.Schema({
     status: { type: String, enum: ["Completed", "Pending"], default: "Completed" },
     notes: { type: String }
   }
-});
+  
+}
+, { timestamps: true});
 
 const PastCycleRecord = mongoose.model("PastCycleRecord", pastCycleSchema);
 export default PastCycleRecord;
