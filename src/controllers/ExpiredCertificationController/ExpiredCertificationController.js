@@ -4,52 +4,50 @@ import Certification from "../../models/CertificationModel/CertificationModel.js
 export const ExpiringCertifications = async (req, res) => {
   try {
     const today = new Date();
-    const next60Days = new Date();
-    next60Days.setDate(today.getDate() + 60);
 
-    // 🔍 Find certifications expiring in the next 60 days
-    const upcomingExpiringCertifications = await Certification.find({
-      certificationExpiryDate: {
-        $gte: today,
-        $lte: next60Days,
-      },
-    }).select(
-      "companyName certificationNumber certificationExpiryDate email attachment logo"
-    );
+    // ✅ 1. Find only expired certifications (expiry date < today)
+    const expiredCertifications = await Certification.find({
+      certificationExpiryDate: { $lt: today },
+    })
+      .select("companyName certificationNumber certificationExpiryDate email attachment logo")
+      .sort({ certificationExpiryDate: -1 }); // ✅ most recently expired first
 
-    // 🔢 Calculate remaining days
-    const certificationsWithRemainingDays = upcomingExpiringCertifications.map((cert) => {
+    // ✅ 2. Add remaining days (negative for expired)
+    const formattedCertifications = expiredCertifications.map((cert) => {
       const expiryDate = new Date(cert.certificationExpiryDate);
-      const diffTime = expiryDate - today;
-      const remainingDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      const remainingDays = Math.ceil(
+        (expiryDate - today) / (1000 * 60 * 60 * 24)
+      ); // will be negative for expired
 
       return {
+        certificationId: cert._id,
         companyName: cert.companyName,
         certificationNumber: cert.certificationNumber,
         certificationExpiryDate: cert.certificationExpiryDate,
-        remainingDays,
+        remainingDays, // ✅ shows how many days ago it expired
         email: cert.email,
-        attachment: cert.attachment,
+        attachment: cert.attachment, // ✅ fixed attachments typo
         logo: cert.logo,
-        certificationId: cert._id,
       };
     });
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
-      message: "Certifications expiring within the next 60 days",
-      total: certificationsWithRemainingDays.length,
-      certifications: certificationsWithRemainingDays,
+      message: "Expired certifications fetched successfully",
+      total: formattedCertifications.length,
+      certifications: formattedCertifications,
     });
+
   } catch (error) {
-    console.error("Error fetching expiring certifications:", error);
-    res.status(500).json({
+    console.error("Error fetching expired certifications:", error);
+    return res.status(500).json({
       success: false,
-      message: "Server error while fetching expiring certifications",
+      message: "Server error while fetching expired certifications",
       error: error.message,
     });
   }
 };
+
 
 // ✅ 2. Filter certifications by expiry info, company, email, or status
 export const filterExpiringCertifications = async (req, res) => {
