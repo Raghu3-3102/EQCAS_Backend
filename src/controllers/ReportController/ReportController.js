@@ -1,6 +1,9 @@
 import Certification from "../../models/CertificationModel/CertificationModel.js";
 import PastCycleRecord from "../../models/PastRSEdate/PastRSEdate.js";
 
+
+
+
 export const getExpiredReports = async (req, res) => {
     try {
 
@@ -638,7 +641,6 @@ export const getMonthlyRenewalCount = async (req, res) => {
   }
 };
 
-
 export const getWeeklyRenewalCount = async (req, res) => {
   try {
     const today = new Date();
@@ -702,7 +704,6 @@ export const getWeeklyRenewalCount = async (req, res) => {
   }
 };
 
-
 export const getDailyRenewalCount = async (req, res) => {
   try {
     const today = new Date();
@@ -748,5 +749,7 @@ export const getDailyRenewalCount = async (req, res) => {
     res.status(500).json({ success: false, message: "Internal Server Error" });
   }
 };
+
+
 
 

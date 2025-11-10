@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { sendOtpMail } from "../../service/MailSender.js"; // optional
 
+
 // Generate JWT token
 const generateToken = (id, role, accessPages = []) =>
   jwt.sign({ id, role, accessPermissionPages: accessPages }, process.env.JWT_SECRET, { expiresIn: "30d" });
@@ -65,6 +66,7 @@ export const login = async (req, res) => {
         id: admin._id,
         email: admin.email,
         role: "admin",
+        ProfilePicture: admin?.ProfilePicture || null,
         accessPermissionPages: "ALL",
         token: generateToken(admin._id, "admin"),
         success: true,
@@ -79,6 +81,7 @@ export const login = async (req, res) => {
         userName: user.userName,
         email: user.userEmail,
         role: user.role,
+        profilePhoto: user?.profilePhoto || null,
         accessPermissionPages: user.accessPermissionPages,
         token: generateToken(user._id, "user", user.accessPermissionPages),
         success: true,

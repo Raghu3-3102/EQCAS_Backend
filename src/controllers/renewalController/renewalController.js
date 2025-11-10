@@ -55,26 +55,73 @@ export const setRenewalDates = async (req, res) => {
     }
 }
 
-export const getRenewalHistory = async (req, res) => {  
-    try {
-        const { certificationId } = req.params;
-        const history = await PastCycleRecord.find({ certificationId });
-        res.status(200).json({ history });
-    }
-    catch (error) {
-        res.status(500).json({ message: "Server error", error: error.message });
-    }   
-}
+export const getRenewalHistory = async (req, res) => {
+  try {
+    const { certificationId } = req.params;
 
-export const getAllRenewalHistories = async (req, res) => {  
-    try {
-        const histories = await PastCycleRecord.find();
-        res.status(200).json({ histories });
-    }       
-    catch (error) {
-        res.status(500).json({ message: "Server error", error: error.message });
-    }       
-}
+    // Fetch certification details
+    const certification = await Certification.findById(certificationId);
+
+    if (!certification) {
+      return res.status(404).json({
+        success: false,
+        message: "Certification not found",
+      });
+    }
+
+    // Fetch past renewal history
+    const history = await PastCycleRecord.find({ certificationId }).sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      certification,   // ✅ Included certification details in response
+      history,         // ✅ Included renewal history
+    });
+
+  } catch (error) {
+    console.error("Error in getRenewalHistory:", error);
+    
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
+
+export const getAllRenewalHistories = async (req, res) => {
+  try {
+    const histories = await PastCycleRecord.find().sort({ createdAt: -1 });
+
+    // Attach certification details with each history
+    const updatedHistories = await Promise.all(
+      histories.map(async (record) => {
+        const certification = await Certification.findById(record.certificationId)
+         
+
+        return {
+          ...record.toObject(),
+          certification,
+        };
+      })
+    );
+
+    res.status(200).json({
+      success: true,
+      histories: updatedHistories,
+    });
+
+  } catch (error) {
+    console.error("Error in getAllRenewalHistories:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
 
 export const getRenewalById = async (req, res) => {  
     try {
