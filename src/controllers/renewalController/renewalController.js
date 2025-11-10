@@ -60,7 +60,7 @@ export const getRenewalHistory = async (req, res) => {
     const { certificationId } = req.params;
 
     // Fetch certification details
-    const certification = await Certification.findById(certificationId);
+    const certification = await Certification.findById(certificationId).populate("assignedAgent");
 
     if (!certification) {
       return res.status(404).json({
@@ -97,7 +97,7 @@ export const getAllRenewalHistories = async (req, res) => {
     // Attach certification details with each history
     const updatedHistories = await Promise.all(
       histories.map(async (record) => {
-        const certification = await Certification.findById(record.certificationId)
+        const certification = await Certification.findById(record.certificationId).populate("assignedAgent")
          
 
         return {
