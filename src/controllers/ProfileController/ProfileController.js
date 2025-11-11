@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 
 // ✏️ Update user profile (edit name, phone number, or upload profile photo)
 export const updateUserProfile = async (req, res) => {
-  try { v
+  try { 
     const { userName, userPhoneNumber } = req.body;
     const profilePhoto = req.file ? req.file.path : null;
 
